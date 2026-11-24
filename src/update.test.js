@@ -1,0 +1,10 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import {validate,applyUpdate,newer} from "./update.js";
+const pack={format:"aether.live/1",revision:3,version:"1.1.3",notes:"Test",presets:{Theme:{Aurora:{accent:"B9A2FF"}}}};
+test("valid manifest",()=>assert.deepEqual(validate(pack),pack));
+test("reject remote executable or nested data",()=>assert.throws(()=>validate({...pack,presets:{Theme:{x:{code:{exec:true}}}}})));
+test("ignore old version",()=>assert.equal(applyUpdate(pack,{...pack,revision:4,version:"1.1.2"}),pack));
+test("new version",()=>assert.equal(applyUpdate(pack,{...pack,revision:4,version:"1.1.4"}).version,"1.1.4"));
+test("numeric semantic version",()=>assert.equal(newer("1.1.10","1.1.9"),true));
+test("reject prototype key",()=>assert.throws(()=>validate({...pack,presets:{Theme:JSON.parse('{"__proto__":{"accent":"FFFFFF"}}')}})));
