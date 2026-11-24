@@ -19,6 +19,9 @@ async fn fetch_manifest() -> Result<serde_json::Value, String> {
     serde_json::from_slice(&body).map_err(|e| e.to_string())
 }
 fn main() {
-    tauri::Builder::default().invoke_handler(tauri::generate_handler![fetch_manifest])
+    tauri::Builder::default()
+        .plugin(tauri_plugin_updater::Builder::new().build())
+        .plugin(tauri_plugin_process::init())
+        .invoke_handler(tauri::generate_handler![fetch_manifest])
         .run(tauri::generate_context!()).expect("AETHER startup failed");
 }
