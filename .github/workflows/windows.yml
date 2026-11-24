@@ -2,7 +2,7 @@ name: Windows preview
 on:
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
 jobs:
   build:
     runs-on: windows-latest
@@ -20,3 +20,12 @@ jobs:
           name: AETHER-Windows-preview
           path: src-tauri/target/release/aether-desktop.exe
           if-no-files-found: error
+      - name: Publish Windows preview release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag = "v0.1.0-preview.${{ github.run_number }}.${{ github.run_attempt }}"
+          Copy-Item src-tauri/target/release/aether-desktop.exe AETHER-Windows.exe
+          gh release create $tag AETHER-Windows.exe --repo "${{ github.repository }}" --target "${{ github.sha }}" --title "AETHER Desktop $tag" --notes "Unsigned Windows preview. Standalone simulator and live data updates." --prerelease
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
