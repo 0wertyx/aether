@@ -1,0 +1,10 @@
+{
+  "identifier": "main",
+  "description": "Local desktop window",
+  "windows": [
+    "main"
+  ],
+  "permissions": [
+    "core:default"
+  ]
+}
