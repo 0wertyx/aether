@@ -1,8 +1,17 @@
-name: Windows preview
+name: Windows signed release
 on:
   workflow_dispatch:
+    inputs:
+      version:
+        description: "Next desktop version, e.g. 0.1.1 (must increase)"
+        required: true
+        default: "0.1.1"
+        type: string
 permissions:
   contents: write
+concurrency:
+  group: aether-desktop-release
+  cancel-in-progress: false
 jobs:
   build:
     runs-on: windows-latest
@@ -14,18 +23,24 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - run: npm install
       - run: npm test
-      - run: npm run tauri build -- --no-bundle
-      - uses: actions/upload-artifact@v4
-        with:
-          name: AETHER-Windows-preview
-          path: src-tauri/target/release/aether-desktop.exe
-          if-no-files-found: error
-      - name: Publish Windows preview release
+      - name: Configure signed installer
         shell: pwsh
         env:
-          GH_TOKEN: ${{ github.token }}
+          AETHER_VERSION: ${{ inputs.version }}
+          TAURI_PUBLIC_KEY: ${{ vars.TAURI_SIGNING_PUBLIC_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
         run: |
-          $tag = "v0.1.0-preview.${{ github.run_number }}.${{ github.run_attempt }}"
-          Copy-Item src-tauri/target/release/aether-desktop.exe AETHER-Windows.exe
-          gh release create $tag AETHER-Windows.exe --repo "${{ github.repository }}" --target "${{ github.sha }}" --title "AETHER Desktop $tag" --notes "Unsigned Windows preview. Standalone simulator and live data updates." --prerelease
+          if (-not $env:TAURI_PUBLIC_KEY -or -not $env:TAURI_SIGNING_PRIVATE_KEY) { throw "Set signing key secret and public key variable first (README)." }
+          node scripts/prepare-release.mjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        with:
+          tagName: v${{ inputs.version }}
+          releaseName: AETHER Desktop v${{ inputs.version }}
+          releaseBody: "Signed AETHER Desktop installer with in-app updates."
+          releaseDraft: false
+          prerelease: false
