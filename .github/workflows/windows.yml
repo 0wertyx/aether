@@ -30,7 +30,8 @@ jobs:
           TAURI_PUBLIC_KEY: ${{ vars.TAURI_SIGNING_PUBLIC_KEY }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
         run: |
-          if (-not $env:TAURI_PUBLIC_KEY -or -not $env:TAURI_SIGNING_PRIVATE_KEY) { throw "Set signing key secret and public key variable first (README)." }
+          if (-not $env:TAURI_PUBLIC_KEY) { throw "Missing repository VARIABLE: TAURI_SIGNING_PUBLIC_KEY" }
+          if (-not $env:TAURI_SIGNING_PRIVATE_KEY) { throw "Missing repository SECRET: TAURI_SIGNING_PRIVATE_KEY" }
           node scripts/prepare-release.mjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - uses: tauri-apps/tauri-action@v0
