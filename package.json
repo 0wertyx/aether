@@ -7,7 +7,7 @@
     "dev": "vite --host 127.0.0.1 --port 1420 --strictPort",
     "build": "vite build",
     "tauri": "tauri",
-    "test": "node --test src/update.test.js src/appearance.test.js"
+    "test": "node --test src/update.test.js src/appearance.test.js src/peerRelay.test.js"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.0.0",
